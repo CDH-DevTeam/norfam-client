@@ -3,7 +3,7 @@ let searchResult = [];
 let activeColumn = "column-1";
 let version = 1;
 
-const domainAddress = "http://localhost:8080";
+const domainAddress = "https://nordiskfamiljebok.dh.gu.se/api";
 const backgroundColors = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"];
 
 const templateWordSim = `
