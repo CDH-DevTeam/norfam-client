@@ -166,7 +166,7 @@ function populateNamedEntities(id) {
 function displayRecord(id, column) {
     toggleVisibility(column, "panel-entities", "panel-terms");
     document.querySelector(`#${column} .display-result`).classList.toggle("d-none");
-    fetch(`${domainAddress}/api/documents/${id}?v=${version}`)
+    fetch(`${domainAddress}/api/documents/${id}/?v=${version}`)
         .then(resp => resp.json())
         .then(record => {
             const parent = document.querySelector(`#${column} #search-result > .card-body`);
