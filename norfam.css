@@ -1,0 +1,33 @@
+html, body {
+    height: 100%;
+}
+
+.input {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.display-result {
+    cursor: pointer;
+}
+
+#search-result {
+    height: 100%;
+}
+
+.summary {
+    cursor: pointer;
+}
+
+.summary:hover {
+    background-color: aliceblue;
+}
+
+.table-neighbors {
+    font-size: 12px;
+}
+
+.vh-90 {
+    height: 90vh !important;
+    max-height: 90vh !important;
+}
