@@ -1,7 +1,15 @@
-let entropyData = {};
-let searchResult = [];
-let activeColumn = "column-1";
-let version = 1;
+var entropyData = {};
+var searchResult = {
+    "column-1": {
+        "version": 0,
+        "records": []
+    },
+    "column-2": {
+        "version": 0,
+        "records": []
+    },
+};
+var activeColumn = "column-1";
 
 const domainAddress = "https://nordiskfamiljebok.dh.gu.se/api";
 const backgroundColors = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"];
@@ -24,7 +32,7 @@ const templateResultItem = `
 `;
 
 const templateEmptyResult = `
-    <div>Sökfrågan returnerade inte några poster</div>
+    <div>Sökfrågan returnerade inte några poster.</div>
 `;
 
 const templateRecord = `
@@ -163,8 +171,9 @@ function populateNamedEntities(id) {
         });
 }
 
-function displayRecord(id, column) {
+function displayRecord(id, version, column) {
     toggleVisibility(column, "panel-entities", "panel-terms");
+    document.body.style.cursor = "default";
     document.querySelector(`#${column} .display-result`).classList.toggle("d-none");
     fetch(`${domainAddress}/api/documents/${id}/?v=${version}`)
         .then(resp => resp.json())
@@ -175,6 +184,15 @@ function displayRecord(id, column) {
             template.content.querySelector(".heading").innerHTML = markSupplement(record.doc_keyword, record.doc_suppl, false);
             template.content.querySelector(".body-text").innerHTML = trimLineBreaks(record.doc_text);
             parent.innerHTML = template.innerHTML;
+            var scanned = (version == 1) ? scanned_1 : scanned_2;
+            var keyword = record.doc_keyword;
+            if (record.doc_suppl == 1) keyword + "@";
+            if (keyword in scanned) {
+                parent.innerHTML += '<div><strong>Faksimiler</strong></div>';
+                for (let src of scanned[keyword]) {
+                    parent.innerHTML += '<div><img src="http://runeberg.org/img' + src + '"></div>';
+                }
+            }
         });
     //populateNamedEntities(id);
 }
@@ -184,15 +202,15 @@ function displayEmptyResult() {
     parent.innerHTML = templateEmptyResult;
 }
 
-function displayResult(result) {
+function displayResult() {
     toggleVisibility(activeColumn, "panel-terms", "panel-entities");
     const parent = document.querySelector(`#${activeColumn} #search-result > .card-body`);
     parent.innerHTML = "";
-    for (let record of result) {
+    for (let record of searchResult[activeColumn].records) {
         const template = document.createElement("template");
         template.innerHTML = templateResultItem;
         template.content.querySelector(".summary").innerHTML = markSupplement(record.doc_abstr, record.doc_suppl, true);
-        template.content.querySelector(".summary").addEventListener("click", displayRecord.bind(this, record.doc_id, activeColumn));
+        template.content.querySelector(".summary").addEventListener("click", displayRecord.bind(this, record.doc_id, searchResult[activeColumn].version, activeColumn));
         parent.appendChild(template.content);
     }
 }
@@ -200,7 +218,7 @@ function displayResult(result) {
 function search() {
     const query = document.querySelector(`#${activeColumn} .txt-search`).value;
     const versionSelector = document.querySelector(`#${activeColumn} .version-number`);
-    version = versionSelector.options[versionSelector.selectedIndex].value;
+    const version = versionSelector.options[versionSelector.selectedIndex].value;
     const searchModeSelector = document.querySelector(`#${activeColumn} .match-level`);
     const searchMode = searchModeSelector.options[searchModeSelector.selectedIndex].value;
     const url = `${domainAddress}/api/query/?q=${query}&v=${version}&m=${searchMode}`;
@@ -208,9 +226,10 @@ function search() {
     fetch(url)
         .then(resp => resp.json())
         .then(result => {
-            searchResult = result;
+            searchResult[activeColumn].records = result;
+            searchResult[activeColumn].version = version;
             if (result.length > 0) {
-                displayResult(result, version);
+                displayResult();
                 populateNeighbors(query);
                 populateIDFChart(result[0].doc_terms);
             } else {
@@ -234,10 +253,9 @@ window.onload = function() {
         }
     });
     $(".display-result").on("click", function() {
+        activeColumn = $(this).data("column");
         $(this).toggleClass("d-none");
-        if (searchResult.length > 0) {
-            displayResult(searchResult);
-        }
+        displayResult();
     });
     $('input[name=columns]').on("change", function() {
         $("#column-2").toggleClass("d-none");
